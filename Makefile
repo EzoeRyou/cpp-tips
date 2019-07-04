@@ -30,13 +30,15 @@ index.md : book/*.md
 
 
 
-SLIDE_SRC := slide/*.md
-SLIDE_HTML :=$(SLIDE_SRC:%.md=%.html)
+SLIDE_MD:= $(wildcard slide/*.md)
+SLIDE_HTML:=$(patsubst slide/%.md, docs/%.html, $(SLIDE_MD) )
 
-slide : SLIDE_HTML
+slide : $(SLIDE_HTML)
 
-slide/%.html : slide/%.md
-	pandoc -t revealjs -s --variable transition-fade -o $@ &<
+$(SLIDE_HTML) : $(SLIDE_MD)
+
+docs/%.html: slide/%.md
+	pandoc -t revealjs -s --variable transition-fade -o $@ $<
 
 
 .PHONY : all book clean test test-tool texttest cpptest retest slide
