@@ -1,0 +1,5 @@
+#!/bin/bash
+
+out="docs/$(basename -- "$1" .md).html"
+
+pandoc -t revealjs -s --variable transition-fade -o "$out" "$1"
