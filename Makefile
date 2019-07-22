@@ -1,4 +1,4 @@
-all : book
+all : book slide
 
 clean :
 	rm -f index.html
@@ -26,7 +26,7 @@ docs/index.html : book/*.md book/style.css
 
 
 index.md : book/*.md
-	pandoc -s --toc --toc-depth=6 --mathjax -o $@ -H book/style.css  book/pandoc_title_block book/*.md
+	pandoc -s --toc --toc-depth=6 -o $@ -H book/style.css  book/pandoc_title_block book/*.md
 
 
 
@@ -38,7 +38,7 @@ slide : $(SLIDE_HTML)
 $(SLIDE_HTML) : $(SLIDE_MD)
 
 docs/%.html: slide/%.md
-	pandoc -t revealjs -s --variable transition-fade -o $@ $<
+	pandoc -t revealjs -s "--mathjax=https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML" --variable transition=fade --variable hash=true -o $@ $<
 
 
 .PHONY : all book clean test test-tool texttest cpptest retest slide
