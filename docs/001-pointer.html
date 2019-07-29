@@ -138,26 +138,160 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li>8bit</li>
 <li><span class="math inline">\(2^8=256\)</span> 通りの値を持つ</li>
-<li>アドレス値1は最初の1バイトのメモリ</li>
-<li>アドレス値2は次の1バイトのメモリ</li>
-<li>…</li>
-<li>アドレス値255は最後の1バイトのメモリ</li>
-</ul>
-<p><span class="math display">\[2^8\]</span></p>
-</section>
-<section id="メモリの指定方法" class="slide level1">
-<h1>メモリの指定方法</h1>
-<ul>
-<li>アドレス値で指定する</li>
-<li>全メモリの任意の1バイトを指定できる</li>
+<li>アドレス値pはある1バイトのメモリを指す</li>
+<li>アドレス値p+nはnバイト先のメモリを指す</li>
+<li>アドレス値p-nはバイト前のメモリを指す</li>
 </ul>
 </section>
-<section id="メモリのアクセス方法" class="slide level1">
-<h1>メモリのアクセス方法</h1>
+<section id="生のアドレス" class="slide level1">
+<h1>生のアドレス</h1>
 <ul>
-<li>間接アクセス(indirection)</li>
+<li>任意の1バイトのメモリ箇所を表現</li>
+<li>現実の値は1バイトとは限らない</li>
+<li>サイズが同じでも解釈は異なる</li>
+<li>整数型、浮動小数点数型、クラス</li>
 </ul>
-<p>アドレス値を間接アクセスするとメモリの値が読み書きできる</p>
+</section>
+<section id="ポインター型" class="slide level1">
+<h1>ポインター型</h1>
+<ul>
+<li>サイズと解釈を型で表現</li>
+<li>ある型へのポインター型</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb1-1" title="1"><span class="co">// Tへのポインター型</span></a>
+<a class="sourceLine" id="cb1-2" title="2">T * ptr ;</a></code></pre></div>
+</section>
+<section id="アクセス" class="slide level1">
+<h1>アクセス</h1>
+<ul>
+<li>operator &amp;でポインターを得る</li>
+<li>operator *で間接アクセスする</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb2-1" title="1"><span class="dt">int</span> obj ;</a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="dt">int</span> * ptr = &amp;obj ;</a>
+<a class="sourceLine" id="cb2-3" title="3">*obj = <span class="dv">123</span> ;</a></code></pre></div>
+</section>
+<section id="演算" class="slide level1">
+<h1>演算</h1>
+<ul>
+<li>加算、減算</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb3-1" title="1">T mem[<span class="dv">100</span>] ;</a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="kw">auto</span> p = &amp;mem[<span class="dv">50</span>]</a>
+<a class="sourceLine" id="cb3-3" title="3">p + n ;</a>
+<a class="sourceLine" id="cb3-4" title="4">p - n ;</a></code></pre></div>
+</section>
+<section id="このとき生のアドレスは" class="slide level1">
+<h1>このとき生のアドレスは</h1>
+<p>ポインターの参照する型のサイズ分加減算される</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb4-1" title="1"><span class="dt">char</span> * char_ptr ;</a>
+<a class="sourceLine" id="cb4-2" title="2">char_ptr + <span class="dv">5</span> ; <span class="co">// sizeof(char) * 5バイトのアドレスを加算</span></a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="dt">int</span> * int_ptr ;</a>
+<a class="sourceLine" id="cb4-4" title="4">int_ptr + <span class="dv">5</span> ; <span class="co">// sizeof(int) * 5バイトのアドレスを加算</span></a></code></pre></div>
+</section>
+<section id="比較" class="slide level1">
+<h1>比較</h1>
+<ul>
+<li>アドレスの比較</li>
+<li>大小比較と等価比較</li>
+<li>同じ配列内の同じ要素を指すポインターは等しい</li>
+<li>同じ配列内の順序に従った大小比較</li>
+</ul>
+</section>
+<section id="ポインターへのポインター" class="slide level1">
+<h1>ポインターへのポインター</h1>
+<ul>
+<li>ポインターも型</li>
+<li>ポインターは型に対するアドレスという型</li>
+<li>ポインターへのポインター</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb5-1" title="1"><span class="dt">int</span> obj ;</a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="dt">int</span> * ptr = &amp;obj ;</a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="dt">int</span> ** pptr = &amp;ptr ;</a>
+<a class="sourceLine" id="cb5-4" title="4"></a>
+<a class="sourceLine" id="cb5-5" title="5">**ppptr = <span class="dv">123</span> ;</a></code></pre></div>
+</section>
+<section id="関数へのポインター" class="slide level1">
+<h1>関数へのポインター</h1>
+<ul>
+<li>関数にもポインターが存在する</li>
+<li>間接アクセスとして呼び出せる</li>
+</ul>
+</section>
+<section id="使い方" class="slide level1">
+<h1>使い方</h1>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb6-1" title="1"><span class="dt">int</span> func( <span class="dt">int</span> x ){ <span class="cf">return</span> x ; }</a>
+<a class="sourceLine" id="cb6-2" title="2"></a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="co">// 関数へのポインター</span></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="kw">auto</span> ptr = &amp;func ;</a>
+<a class="sourceLine" id="cb6-5" title="5"><span class="co">// 間接アクセスによる呼び出し</span></a>
+<a class="sourceLine" id="cb6-6" title="6">(*ptr)(<span class="dv">123</span>) ;</a>
+<a class="sourceLine" id="cb6-7" title="7"><span class="co">// 便利なシンタックスシュガー</span></a>
+<a class="sourceLine" id="cb6-8" title="8">ptr(<span class="dv">123</span>) ;</a></code></pre></div>
+</section>
+<section id="型" class="slide level1">
+<h1>型</h1>
+<p>戻り値の型Rで引数として型Aを取る関数の型</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb7-1" title="1">R (A)</a></code></pre></div>
+<p>関数へのポインター型</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb8-1" title="1">R (*)(A)</a></code></pre></div>
+</section>
+<section id="複雑な型" class="slide level1">
+<h1>複雑な型</h1>
+<p>戻り値の型が関数へのポインター型で、引数として関数へのポインター型を取る関数へのポインター</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb9-1" title="1">R1(*)( R2(*)(A2) )(A1)</a></code></pre></div>
+</section>
+<section id="エイリアス宣言" class="slide level1">
+<h1>エイリアス宣言</h1>
+<div class="sourceCode" id="cb10"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">using</span> <span class="dt">return_type</span> = R1(A1) ;</a>
+<a class="sourceLine" id="cb10-2" title="2"><span class="kw">using</span> <span class="dt">parameter_type</span> = R2(A2) ;</a>
+<a class="sourceLine" id="cb10-3" title="3"><span class="kw">using</span> <span class="dt">function_type</span> = <span class="dt">return_type</span> *( <span class="dt">parameter_type</span> * ) ;</a>
+<a class="sourceLine" id="cb10-4" title="4"><span class="kw">using</span> <span class="dt">function_ptr_type</span> = <span class="dt">function_type</span> * ;</a></code></pre></div>
+</section>
+<section id="autodecltype" class="slide level1">
+<h1>auto/decltype</h1>
+<div class="sourceCode" id="cb11"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb11-1" title="1"><span class="co">// 地獄から着た同僚の書いた関数</span></a>
+<a class="sourceLine" id="cb11-2" title="2">R1 func( R2(*)(A2) )(A1) ;</a>
+<a class="sourceLine" id="cb11-3" title="3"></a>
+<a class="sourceLine" id="cb11-4" title="4"><span class="kw">auto</span> ptr = &amp;func ;</a>
+<a class="sourceLine" id="cb11-5" title="5"><span class="kw">using</span> <span class="dt">func_type</span> = <span class="kw">decltype</span>(&amp;func) ;</a>
+<a class="sourceLine" id="cb11-6" title="6"><span class="dt">func_type</span> = &amp;func ;</a></code></pre></div>
+</section>
+<section id="nullポインター" class="slide level1">
+<h1>nullポインター</h1>
+<ul>
+<li>有効な値を指していないポインター値</li>
+</ul>
+</section>
+<section id="null" class="slide level1">
+<h1>NULL</h1>
+<ul>
+<li>C言語が導入</li>
+<li>プリプロセッサーマクロ</li>
+<li>nullポインター値として使えるトークン列に変換される</li>
+</ul>
+</section>
+<section id="section" class="slide level1">
+<h1>0</h1>
+<ul>
+<li>C++が導入</li>
+<li>nullポインターリテラル</li>
+<li>nullポインターの生のアドレス値が0という意味ではない</li>
+</ul>
+</section>
+<section id="nullptr" class="slide level1">
+<h1>nullptr</h1>
+<ul>
+<li>C++11が導入</li>
+<li>nullポインターリテラル</li>
+</ul>
+</section>
+<section id="stdnullptr_t" class="slide level1">
+<h1>std::nullptr_t</h1>
+<ul>
+<li>nullポインター値しか妥当な値を持たないポインター型</li>
+</ul>
+<div class="sourceCode" id="cb12"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">using</span> <span class="dt">nullptr_t</span> = <span class="kw">decltype</span>(<span class="kw">nullptr</span>) ;</a></code></pre></div>
 </section>
 <section id="変遷" class="slide level1">
 <h1>変遷</h1>
@@ -181,10 +315,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="例" class="slide level1">
 <h1>例</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb1-1" title="1"><span class="dt">int</span> * p1 = ... ;</a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="dt">void</span> * p2 = p1 ;</a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="dt">int</span> * p3 = <span class="kw">static_cast</span>&lt;<span class="dt">int</span> *&gt;(p2) ;</a>
-<a class="sourceLine" id="cb1-4" title="4">p1 == p3 ; <span class="co">// true</span></a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb13-1" title="1"><span class="dt">int</span> * p1 = ... ;</a>
+<a class="sourceLine" id="cb13-2" title="2"><span class="dt">void</span> * p2 = p1 ;</a>
+<a class="sourceLine" id="cb13-3" title="3"><span class="dt">int</span> * p3 = <span class="kw">static_cast</span>&lt;<span class="dt">int</span> *&gt;(p2) ;</a>
+<a class="sourceLine" id="cb13-4" title="4">p1 == p3 ; <span class="co">// true</span></a></code></pre></div>
 </section>
 <section id="メンバーへのポインター" class="slide level1">
 <h1>メンバーへのポインター</h1>
@@ -193,38 +327,38 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>データメンバーへのポインター</li>
 </ul>
 </section>
-<section id="型" class="slide level1">
+<section id="型-1" class="slide level1">
 <h1>型</h1>
 <p>クラスCの型Tのメンバーへのポインター型</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb2-1" title="1">T C::*</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb14-1" title="1">T C::*</a></code></pre></div>
 </section>
 <section id="ポインターを得る方法" class="slide level1">
 <h1>ポインターを得る方法</h1>
 <p>クラスCのメンバー名memberへのポインターを得る</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb3-1" title="1">&amp;C::member</a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb15-1" title="1">&amp;C::member</a></code></pre></div>
 </section>
 <section id="間接アクセス" class="slide level1">
 <h1>間接アクセス</h1>
 <p>クラスのオブジェクトobjectにメンバーへのポインターmem_ptrを使ってメンバーへの間接アクセス</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb4-1" title="1">(object.*mem_ptr)</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb16-1" title="1">(object.*mem_ptr)</a></code></pre></div>
 <p>クラスへのポインターptrにメンバーへのポインターmem_ptrを使ってメンバーへの間接アクセス</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb5-1" title="1">(ptr-&gt;*mem_ptr)</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb17-1" title="1">(ptr-&gt;*mem_ptr)</a></code></pre></div>
 </section>
 <section id="データメンバーの例" class="slide level1">
 <h1>データメンバーの例</h1>
-<div class="sourceCode" id="cb6"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">struct</span> C { <span class="dt">int</span> member ; } ;</a>
-<a class="sourceLine" id="cb6-2" title="2"><span class="dt">int</span> C::* mem_ptr = &amp;C::member ;</a>
-<a class="sourceLine" id="cb6-3" title="3">C object ;</a>
-<a class="sourceLine" id="cb6-4" title="4"><span class="co">// データメンバーへのアクセス</span></a>
-<a class="sourceLine" id="cb6-5" title="5">(object.*mem_ptr) = <span class="dv">123</span> ;</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">struct</span> C { <span class="dt">int</span> member ; } ;</a>
+<a class="sourceLine" id="cb18-2" title="2"><span class="dt">int</span> C::* mem_ptr = &amp;C::member ;</a>
+<a class="sourceLine" id="cb18-3" title="3">C object ;</a>
+<a class="sourceLine" id="cb18-4" title="4"><span class="co">// データメンバーへのアクセス</span></a>
+<a class="sourceLine" id="cb18-5" title="5">(object.*mem_ptr) = <span class="dv">123</span> ;</a></code></pre></div>
 </section>
 <section id="メンバー関数の例" class="slide level1">
 <h1>メンバー関数の例</h1>
-<div class="sourceCode" id="cb7"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">struct</span> C{ <span class="dt">void</span> member() {} } ;</a>
-<a class="sourceLine" id="cb7-2" title="2"><span class="dt">void</span> (C::* mem_ptr)() = &amp;C::member ;</a>
-<a class="sourceLine" id="cb7-3" title="3">C object ;</a>
-<a class="sourceLine" id="cb7-4" title="4"><span class="co">// メンバー関数呼び出し</span></a>
-<a class="sourceLine" id="cb7-5" title="5">(object.*mem_ptr)() ;</a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">struct</span> C{ <span class="dt">void</span> member() {} } ;</a>
+<a class="sourceLine" id="cb19-2" title="2"><span class="dt">void</span> (C::* mem_ptr)() = &amp;C::member ;</a>
+<a class="sourceLine" id="cb19-3" title="3">C object ;</a>
+<a class="sourceLine" id="cb19-4" title="4"><span class="co">// メンバー関数呼び出し</span></a>
+<a class="sourceLine" id="cb19-5" title="5">(object.*mem_ptr)() ;</a></code></pre></div>
 </section>
 <section id="nullポインターリテラルとしての0" class="slide level1">
 <h1>nullポインターリテラルとしての0</h1>
@@ -235,14 +369,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>nullポインター値は0とは限らない</li>
 </ul>
 </section>
-<section id="nullptr" class="slide level1">
+<section id="nullptr-1" class="slide level1">
 <h1>nullptr</h1>
 <ul>
 <li>C++11で追加されたnullポインターリテラル</li>
 <li>型はstd::nullptr_t</li>
 </ul>
 <p>定義</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">using</span> <span class="dt">nullptr_t</span> = <span class="kw">decltype</span>(<span class="kw">nullptr</span>) ;</a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">using</span> <span class="dt">nullptr_t</span> = <span class="kw">decltype</span>(<span class="kw">nullptr</span>) ;</a></code></pre></div>
 </section>
 <section id="用語" class="slide level1">
 <h1>用語</h1>
