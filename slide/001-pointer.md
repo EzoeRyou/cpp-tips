@@ -229,11 +229,27 @@ auto ptr = std::make_unique<T>(...) ;
 
 ~~~cpp
 auto ptr = std::make_shared<T>(...) ;
+~~~
 
 # weak_ptr
 
 + 使うな
 
+# デリーター
+
++ default_deleter
++ デストラクター呼び出し時にポインターをdeleteしてくれる
++ deleteで破棄しないポインターには使えない
+
+# カスタムデリーター
+
++ operator ()(T * p)がpを解放
+
+~~~cpp
+std::shared_ptr<int> (
+    static_cast<int *>( std::malloc(sizeof(int) ),
+    std::function<void (int *)>( []( int * ptr ){ std::free(ptr) } ) ;
+~~~
 
 # 変遷
 
@@ -341,3 +357,29 @@ C object ;
 
 最近の規格改定で用語が統一された
 
+# 現実のハードウェア
+
++ WIN16
++ x86
++ x86-64
+
+# WIN16
+
++ MS-DOS
++ Windows 3.1
++ Intelの16bit CPU
++ near/farポインター
++ 16bitアドレス
++ セグメントレジスタ
++ 16bit+16bitアドレス
+
+# x86
+
++ 32bitアドレス
++ Windowsでは上位2GBをカーネルが使う
++ PAEでカーネルが1GBで頑張る
+
+# x86-64
+
++ 64bitアドレス
++ 48bit有効

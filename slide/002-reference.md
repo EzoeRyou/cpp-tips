@@ -51,9 +51,7 @@ std::cout << obj ; // 1
 int & ref ; // エラー
 ~~~
 
-# 値
-
-+ 
+# 様々な値
 
 ~~~cpp
 int f() ;
@@ -63,5 +61,23 @@ f() ;
 x ;
 x + x ;
 0 ;
-~~~o
+~~~
+
+# 値カテゴリー
+
+値には種類がある
+
++ value
++ glvalue/rvalues
++lvalue/xvalue/prvalue
+
+# value
+
++ すべての値の総称
++ glvalu
++ rvalues
+
+# glvalue
+
++ genera
 
