@@ -38,7 +38,7 @@ slide : $(SLIDE_HTML)
 $(SLIDE_HTML) : $(SLIDE_MD)
 
 docs/%.html: slide/%.md
-	pandoc -t revealjs -s "--mathjax=https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML" --variable transition=fade --variable hash=true -o $@ $<
+	pandoc -t revealjs -s  "--mathjax=https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML" --variable transition=fade --variable hash=true -o $@ $<
 
 
 .PHONY : all book clean test test-tool texttest cpptest retest slide
