@@ -424,6 +424,13 @@ struct A
 
 # 非型テンプレートパラメーター
 
++ 型ではない
++ 値
++ 整数値
++ C++20からリテラル型（却下されそう）
+
+# 例
+
 ~~~cpp
 template < int N >
 int f()
@@ -448,4 +455,135 @@ S<0> ;
 S<0L>
 ~~~
 
-# 
+# デフォルトテンプレート実引数
+
+~~~cpp
+template <
+    typename type = int,
+    type value = 0
+>
+void f() ;
+~~~
+
+# テンプレートテンプレートパラメーター
+
++ テンプレートを受け取る
+
+# C++14まで
+
+~~~cpp
+template < 
+    template < typename T, typename Allocator >
+        class Container
+>
+void f()
+{
+    Container< int, std::allocator > c ;
+    c.insert( std::begin(c), 0 ) ;
+}
+~~~
+
+# C++17以降
+
+~~~cpp
+template <
+    template < typename T >
+        typename Container
+>
+void f()
+{
+    Container< int > c ;
+    c.insert( std::end(c), 0 ) ;
+} 
+~~~
+
+# 変更点
+
++ typenameでもいい
++ exact matchでなくてもいい
++ デフォルトテンプレート実引数
+
+# 依存名
+
++ テンプレートコード内の
++ テンプレート仮引数に依存する名前
+
+# 例
+
+~~~cPP
+template < typename T >
+void f(T x)
+{
+    T y = x ;
+    std::vector<T> v ;
+    x = T::value ;
+    std::vector<decltype(x)> z ;    
+} ;
+~~~
+
+# 名前の解釈
+
++ テンプレートコード
++ 実体化するまで名前解決ができない
++ しかし非依存名なら解決できる
+
+# 例
+
+~~~cpp
+template < typename callable >
+void f(callable f)
+{
+    // 依存名
+    f() ;
+    // 非依存名
+    g() ;
+}
+~~~
+
+# ルール
+
++ 非依存名はテンプレート宣言時に解決
++ 依存名はテンプレート実体化時に解決
+
+# 型と値
+
++ コンパイラーの都合上
++ 依存名でも
++ 型か
++ 値か
++ ぐらいは解決したい
+
+# ルール
+
++ 依存名は値
++ 明示的にtypenameを書いた場合のみ型
+
+# 例
+
+~~~cpp
+template < typename T >
+void f()
+[
+    // 型
+    // 宣言文
+    // 型T::typeの変数x
+    typename T::type x ;
+    // 値
+    // 式文
+    // 乗算
+    T::value * x ;
+}
+~~~
+
+# 例
+　
+~~~cpp
+template < typename T >
+typename T::type
+f( typename T::type )
+{
+    using type = typename T::type ;
+    static_cast<typename T::type>(0) ;
+    std::vector< typename T::type > v ;
+}
+~~~
