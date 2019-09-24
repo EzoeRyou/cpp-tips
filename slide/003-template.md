@@ -510,7 +510,7 @@ void f()
 
 # 例
 
-~~~cPP
+~~~cpp
 template < typename T >
 void f(T x)
 {
@@ -583,7 +583,44 @@ typename T::type
 f( typename T::type )
 {
     using type = typename T::type ;
-    static_cast<typename T::type>(0) ;
+    static_cast< typename T::type >(0) ;
     std::vector< typename T::type > v ;
 }
 ~~~
+
+# C++17以降
+
++ 文脈上型しか書けない場所
++ 型だとみなす
++ typename不要
+
+
+# 例
+　
+~~~cpp
+template < typename T >
+typename T::type
+f( typename T::type )
+{
+    using type = T::type ;
+    static_cast< T::type >(0) ;
+    std::vector< typename T::type > v ;
+}
+~~~
+
+# 例
+
+~~~cpp
+template < typename T >
+struct S
+{
+    // クラススコープなら型しかない
+    void f( T::type ) ;
+} 
+
+// ブロックスコープは値がありうる
+template < typename T >
+void f( typename T::type ) ;
+~~~
+
+# 
