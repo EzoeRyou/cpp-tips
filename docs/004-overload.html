@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="江添亮">
+  <meta name="dcterms.date" content="2019-09-23">
+  <title>オーバーロード</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="reveal.js/css/reveal.css">
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="reveal.js/css/theme/black.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">オーバーロード</h1>
+  <p class="author">江添亮</p>
+  <p class="date">2019-09-23</p>
+</section>
+
+<section id="お題" class="slide level1">
+<h1>お題</h1>
+<ul>
+<li>標準変換</li>
+<li>オーバーロード解決</li>
+<li>テンプレートの実引数推定</li>
+</ul>
+</section>
+<section id="標準変換" class="slide level1">
+<h1>標準変換</h1>
+<ul>
+<li>暗黙の型変換</li>
+<li>ある型の値に対して</li>
+<li>同じ値だが別の型に変換する</li>
+<li>人間の考える同じ値</li>
+</ul>
+</section>
+<section id="例" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>X x ;
+Y y ;
+x = y ;</code></pre>
+</section>
+<section id="例-1" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>void f( X x ) ;
+
+Y y ;
+f( y ) ;</code></pre>
+</section>
+<section id="lvalue-to-rvalue-conversion" class="slide level1">
+<h1>lvalue-to-rvalue conversion</h1>
+<ul>
+<li>glvalueからprvalueへの変換</li>
+<li>名前が悪い</li>
+<li>名前から連想する変換ではない</li>
+</ul>
+</section>
+<section id="array-to-pointer-conversion" class="slide level1">
+<h1>array-to-pointer conversion</h1>
+<ul>
+<li>配列から先頭要素へのポインター</li>
+</ul>
+<pre class="cpp"><code>int a[10] ;
+// &amp;a[0]
+int * p = a ;</code></pre>
+</section>
+<section id="function-to-pointer-conversion" class="slide level1">
+<h1>function-to-pointer conversion</h1>
+<ul>
+<li>関数から関数ポインター</li>
+</ul>
+<pre class="cpp"><code>void f() ;
+// &amp;f
+void (*p)() = f ;</code></pre>
+</section>
+<section id="注意" class="slide level1">
+<h1>注意</h1>
+<ul>
+<li>メンバー関数からメンバーへのポインターには変換されない</li>
+</ul>
+<pre class="cpp"><code>struct S { void f() ; } ;
+// エラー、&amp;が必要
+void (S::*p)() = S::f ;</code></pre>
+</section>
+<section id="temporary-materialization-conversion" class="slide level1">
+<h1>temporary materialization conversion</h1>
+<ul>
+<li>prvalueからxvalueへの変換</li>
+<li>オーバーロード解決には使われない</li>
+</ul>
+<pre class="cpp"><code>struct S{ int x ; } ;
+int y = S().x ;</code></pre>
+</section>
+<section id="qualification-conversions" class="slide level1">
+<h1>qualification conversions</h1>
+<ul>
+<li>CV修飾子を追加する変換</li>
+<li><code>T</code>→<code>T const</code></li>
+<li><code>T *</code>→<code>T const *</code></li>
+</ul>
+</section>
+<section id="integral-promotions" class="slide level1">
+<h1>integral promotions</h1>
+<ul>
+<li>intより変換ランクの低い型を整数型をint型に変換</li>
+<li><code>char</code>→<code>int</code></li>
+<li><code>short</code>→<code>int</code></li>
+<li><code>int</code>で表現できなければ<code>unsigned int</code>に変換</li>
+<li>安全</li>
+</ul>
+</section>
+<section id="floating-point-promotion" class="slide level1">
+<h1>floating-point promotion</h1>
+<ul>
+<li>floatからdobule</li>
+<li>安全</li>
+</ul>
+</section>
+<section id="integral-conversions" class="slide level1">
+<h1>integral conversions</h1>
+<ul>
+<li>整数型から整数型への変換</li>
+<li>危険</li>
+</ul>
+</section>
+<section id="floating-point-conversions" class="slide level1">
+<h1>floating-point conversions</h1>
+<ul>
+<li>浮動小数点数型から浮動小数点数型への変換</li>
+<li>危険</li>
+</ul>
+</section>
+<section id="floating-integral-conversions" class="slide level1">
+<h1>floating-integral conversions</h1>
+<ul>
+<li>浮動小数点数型から整数型への変換</li>
+<li>整数型から浮動小数点数型への変換</li>
+<li>危険</li>
+</ul>
+</section>
+<section id="pointer-conversions" class="slide level1">
+<h1>pointer conversions</h1>
+<ul>
+<li>nullポインター定数を任意のポインター型に変換</li>
+<li>ポインター型をvoid *型に変換</li>
+<li>クラスへのポインター型から基本クラスへのポインター型への変換</li>
+</ul>
+<pre class="cpp"><code>struct B { } ;
+struct D : B { } ;
+D d ;
+B * p = &amp;d ;</code></pre>
+</section>
+<section id="pointer-to-member-conversions" class="slide level1">
+<h1>pointer-to-member conversions</h1>
+<ul>
+<li>nullポインター定数をメンバーへのポインター型に変換</li>
+<li>基本クラスのメンバーへのポインター型からクラスのメンバーへのポインター型への変換</li>
+</ul>
+<pre class="cpp"><code>struct B { int x ; } ;
+struct D : B { } ;
+int D::* p = &amp;B::x ;</code></pre>
+</section>
+<section id="function-pointer-conversions" class="slide level1">
+<h1>function pointer conversions</h1>
+<ul>
+<li>noexcept関数へのポインターを関数へのポインターに変換</li>
+</ul>
+</section>
+<section id="boolean-conversion" class="slide level1">
+<h1>boolean conversion</h1>
+<ul>
+<li>boolへの変換</li>
+<li>数値</li>
+<li>unscoped enum</li>
+<li>ポインター</li>
+<li>メンバーへのポインター</li>
+</ul>
+</section>
+<section id="falseの値" class="slide level1">
+<h1>falseの値</h1>
+<ul>
+<li>ゼロ値</li>
+<li>nullポインター値</li>
+<li>nullメンバーポインター値</li>
+</ul>
+</section>
+<section id="trueの値" class="slide level1">
+<h1>trueの値</h1>
+<ul>
+<li>false以外</li>
+</ul>
+</section>
+<section id="ユーザー定義変換" class="slide level1">
+<h1>ユーザー定義変換</h1>
+<ul>
+<li>クラス型から別の型への変換</li>
+<li>別の型からクラス型への変換</li>
+</ul>
+</section>
+<section id="コンストラクターによる変換" class="slide level1">
+<h1>コンストラクターによる変換</h1>
+<ul>
+<li>変換コンストラクター</li>
+<li>explicitではない</li>
+</ul>
+</section>
+<section id="例-2" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>struct S
+{
+    S( int ) ;
+    S( double, int = 0 ) ;
+    S( int, int ) ;
+} ;</code></pre>
+</section>
+<section id="変換例" class="slide level1">
+<h1>変換例</h1>
+<pre class="cpp"><code>S a = 1 ;
+S b = 0.0 ;
+S c = {1,2} ;</code></pre>
+</section>
+<section id="変換関数" class="slide level1">
+<h1>変換関数</h1>
+<ul>
+<li>メンバー関数</li>
+<li>仮引数なし</li>
+<li>名前が<code>operator 型名</code></li>
+</ul>
+</section>
+<section id="例-3" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>struct S
+{
+    operator int() ;
+} ;
+
+S s ;
+int x = s ;</code></pre>
+</section>
+<section id="関数のオーバーロード" class="slide level1">
+<h1>関数のオーバーロード</h1>
+<ul>
+<li>関数名が同じ</li>
+<li>引数リストが違う</li>
+<li>複数の関数が共存できる</li>
+</ul>
+</section>
+<section id="例-4" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>void f( int ) ;
+void f( double ) ;
+
+int main()
+{
+    f(0) ;      // int
+    f(0.0) ;    // double
+}</code></pre>
+</section>
+<section id="問題" class="slide level1">
+<h1>問題</h1>
+<ul>
+<li>名前は同じ</li>
+<li>シグネチャは異なる</li>
+<li>どうやって選ぶのか？</li>
+</ul>
+</section>
+<section id="概要" class="slide level1">
+<h1>概要</h1>
+<ul>
+<li>候補関数を列挙</li>
+<li>呼び出し可能な関数を絞り込む</li>
+<li>最適な関数を1つ選ぶ</li>
+</ul>
+</section>
+<section id="候補関数を列挙" class="slide level1">
+<h1>候補関数を列挙</h1>
+<ul>
+<li>大きく分けて7種類</li>
+</ul>
+</section>
+<section id="関数呼び出し文法" class="slide level1">
+<h1>関数呼び出し文法</h1>
+<pre class="cpp"><code>f( 0 ) ;
+f( 0.0 ) ;
+f( &quot;0&quot;sv ) ;</code></pre>
+</section>
+<section id="名前付き関数を呼ぶ" class="slide level1">
+<h1>名前付き関数を呼ぶ</h1>
+<pre class="cpp"><code>void f( int ) ;
+void f( double ) ;
+void f( string_view ) ;</code></pre>
+</section>
+<section id="候補関数" class="slide level1">
+<h1>候補関数</h1>
+<ul>
+<li>関数名を名前検索</li>
+<li>名前検索の規則に注意</li>
+<li>qualified lookup</li>
+<li>unqualified lookup</li>
+<li>ADL</li>
+</ul>
+</section>
+<section id="クラス型のオブジェクトの呼び出し" class="slide level1">
+<h1>クラス型のオブジェクトの呼び出し</h1>
+<pre class="cpp"><code>struct F
+{
+    void operator()(int) ;
+    void operator()(double) ;
+    void operator())(string_view) ;
+} ;
+
+F f ;</code></pre>
+</section>
+<section id="候補関数-1" class="slide level1">
+<h1>候補関数</h1>
+<ul>
+<li>クラスから<code>operator()</code>を名前検索</li>
+</ul>
+</section>
+<section id="式中の演算子" class="slide level1">
+<h1>式中の演算子</h1>
+<pre class="cpp"><code>X x ;
+
+x + x ;
+X + 1 ;
+X + 0.0 ;</code></pre>
+</section>
+<section id="候補関数-2" class="slide level1">
+<h1>候補関数</h1>
+<ul>
+<li>メンバー候補</li>
+<li>非メンバー候補</li>
+<li>ビルトイン候補</li>
+<li>rewritten candidates</li>
+</ul>
+</section>
+<section id="rewritten-candidates" class="slide level1">
+<h1>rewritten candidates</h1>
+<ul>
+<li><code>operator &lt;=&gt;</code>から生成される演算子のこと</li>
+</ul>
+<pre class="cpp"><code>struct S
+{
+    strong_ordering operator &lt;=&gt;( S const &amp; ) const ;
+} ;
+
+S a, b ;
+a &lt; b ;</code></pre>
+</section>
+<section id="コンストラクターによる初期化" class="slide level1">
+<h1>コンストラクターによる初期化</h1>
+<ul>
+<li>返還コストラクターを列挙</li>
+</ul>
+<pre class="cpp"><code>struct S
+{
+    S(int) ;
+    S(double) ;
+} ;
+
+S a = 0 ;
+S b = 0.0 ;</code></pre>
+</section>
+<section id="ユーザー定義変換によるクラスのコピー初期化" class="slide level1">
+<h1>ユーザー定義変換によるクラスのコピー初期化</h1>
+<ul>
+<li>変換関数が候補</li>
+</ul>
+<pre class="cpp"><code>struct A { } ;
+
+struct B
+{
+    operator A(){ return A() ; }
+} ;
+
+B b ;
+A a = b ;</code></pre>
+</section>
+<section id="直接リファレンス初期化のための変換関数による初期化" class="slide level1">
+<h1>直接リファレンス初期化のための変換関数による初期化</h1>
+<ul>
+<li>変換関数が候補</li>
+</ul>
+<pre class="cpp"><code>A &amp;&amp; a = b ;</code></pre>
+</section>
+<section id="リスト初期化による初期化" class="slide level1">
+<h1>リスト初期化による初期化</h1>
+<pre class="cpp"><code>struct S
+{
+    S( double, double ) ;
+    S( std::initializer_list&lt;int&gt; ) ;
+} ;
+
+S a = {0.0, 1.0} ;
+S b = {1,2,3} ;</code></pre>
+</section>
+<section id="候補関数初回" class="slide level1">
+<h1>候補関数(初回)</h1>
+<ul>
+<li>初期化リストコンストラクター</li>
+</ul>
+</section>
+<section id="候補関数2回目" class="slide level1">
+<h1>候補関数(2回目)</h1>
+<ul>
+<li>初期化リストコンストラクターが呼び出し可能ではない場合</li>
+<li>コンストラクター</li>
+</ul>
+</section>
+<section id="viable-functions" class="slide level1">
+<h1>viable functions</h1>
+<ul>
+<li>呼び出し可能関数</li>
+<li>引数の数が一致</li>
+<li>デフォルト実引数も考慮する</li>
+<li>仮引数の型に変換できる暗黙の標準変換が存在する</li>
+</ul>
+</section>
+<section id="best-viable-functions" class="slide level1">
+<h1>best viable functions</h1>
+<ul>
+<li>呼び出し関数のうち</li>
+<li>最も最適なひとつの関数</li>
+<li>オーバーロード解決の結果</li>
+<li>最も最適な関数が複数存在するなら曖昧</li>
+</ul>
+</section>
+<section id="最適" class="slide level1">
+<h1>最適</h1>
+<ul>
+<li>複数の関数から最適なひとつの関数を決定する</li>
+<li>関数は大小比較可能でなければならない</li>
+<li>比較する要素は複数</li>
+</ul>
+</section>
+<section id="良し悪し" class="slide level1">
+<h1>良し悪し</h1>
+<ul>
+<li>ある関数が別の関数に比べて</li>
+<li>すべての要素について悪くなく</li>
+<li>何かの要素について良い場合</li>
+<li>ある関数は別の関数より良い関数</li>
+</ul>
+</section>
+<section id="規格を参照" class="slide level1">
+<h1>規格を参照</h1>
+<ul>
+<li>比較する要素について</li>
+<li>暗黙の変換シーケンスのランク</li>
+</ul>
+</section>
+<section id="オーバーロード関数のアドレス" class="slide level1">
+<h1>オーバーロード関数のアドレス</h1>
+<pre class="cpp"><code>void f(int) ;
+void f(double) ;
+// OK
+void (*p)(int) = &amp;f ;</code></pre>
+</section>
+<section id="解説" class="slide level1">
+<h1>解説</h1>
+<ul>
+<li>オーバーロードされた関数名</li>
+<li>アドレスを取るとき</li>
+<li>文脈上オーバーロード解決</li>
+</ul>
+</section>
+<section id="テンプレート実引数推定" class="slide level1">
+<h1>テンプレート実引数推定</h1>
+<ul>
+<li>実引数の型から仮引数の型を推定</li>
+</ul>
+<pre class="cpp"><code>tempalte &lt; typename T &gt;
+void f( T ) ;
+
+f(0) ; // T = int
+f(0.0) ; // T = double</code></pre>
+</section>
+<section id="複雑な例" class="slide level1">
+<h1>複雑な例</h1>
+<pre class="cpp"><code>template &lt; typename T &gt;
+void f( const T ) ;
+
+f( 0 ) ; // T = int</code></pre>
+</section>
+<section id="もうひとつ例" class="slide level1">
+<h1>もうひとつ例</h1>
+<pre class="cpp"><code>template &lt; typename T &gt;
+void f( T * ) ;
+int x{} ;
+f( &amp;x ) ; // T = int</code></pre>
+</section>
+<section id="推定方法" class="slide level1">
+<h1>推定方法</h1>
+<ul>
+<li>function parameter type adjustments</li>
+<li>Tへの配列型→ Tへのポインター型</li>
+<li>トップレベルCV修飾子の削除</li>
+</ul>
+</section>
+<section id="仮引数と実引数をすり合わせる" class="slide level1">
+<h1>仮引数と実引数をすり合わせる</h1>
+<ul>
+<li>仮引数が<code>T *</code></li>
+<li>実引数が<code>int *</code></li>
+<li>T = <code>int</code></li>
+</ul>
+</section>
+<section id="placeholder-type-specifiers" class="slide level1">
+<h1>placeholder type specifiers</h1>
+<ul>
+<li>auto</li>
+<li>decltype(auto)</li>
+</ul>
+</section>
+<section id="例-5" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>// int
+auto a = 0 ;
+// double
+auto b = 0.0 ;</code></pre>
+</section>
+<section id="例-6" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>// int
+decltype(auto) a = 0 ;
+// double
+decltype(auto) b = 0.0 ;</code></pre>
+</section>
+<section id="decltypeauto" class="slide level1">
+<h1>decltype(auto)</h1>
+<ul>
+<li>同じ意味</li>
+</ul>
+<pre class="cpp"><code>decltype(auto) name = expr ;
+
+decltype(expr) name = expr ;</code></pre>
+</section>
+<section id="auto" class="slide level1">
+<h1>auto</h1>
+<ul>
+<li>テンプレート実引数推定のルールを使う</li>
+</ul>
+</section>
+<section id="違い" class="slide level1">
+<h1>違い</h1>
+<pre class="cpp"><code>// int &amp;&amp;
+auto &amp;&amp; a = 0 ;
+// エラー
+decltype(auto) &amp;&amp; b = 0 ;</code></pre>
+</section>
+<section id="違い-1" class="slide level1">
+<h1>違い</h1>
+<pre class="cpp"><code>int &amp;&amp; f() ;
+
+// int
+auto a = f() ;
+// int &amp;&amp;
+decltype(auto) b = f() ;</code></pre>
+</section>
+    </div>
+  </div>
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Transition style
+        transition: 'fade', // none/fade/slide/convex/concave/zoom
+        math: {
+          mathjax: '/usr/share/javascript/mathjax/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal.js/plugin/math/math.js', async: true },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>

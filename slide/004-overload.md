@@ -206,7 +206,6 @@ S s ;
 int x = s ;
 ~~~
 
-# <F9>
 
 # 関数のオーバーロード
 
@@ -395,5 +394,131 @@ S b = {1,2,3} ;
 
 + 複数の関数から最適なひとつの関数を決定する
 + 関数は大小比較可能でなければならない
++ 比較する要素は複数
 
-# 
+# 良し悪し
+
++ ある関数が別の関数に比べて
++ すべての要素について悪くなく
++ 何かの要素について良い場合
++ ある関数は別の関数より良い関数
+
+# 規格を参照
+
++ 比較する要素について
++ 暗黙の変換シーケンスのランク
+
+# オーバーロード関数のアドレス
+
+~~~cpp
+void f(int) ;
+void f(double) ;
+// OK
+void (*p)(int) = &f ;
+~~~
+
+# 解説
+
++ オーバーロードされた関数名
++ アドレスを取るとき
++ 文脈上オーバーロード解決
+
+# テンプレート実引数推定
+
++ 実引数の型から仮引数の型を推定
+
+~~~cpp
+tempalte < typename T >
+void f( T ) ;
+
+f(0) ; // T = int
+f(0.0) ; // T = double
+~~~
+
+# 複雑な例
+
+~~~cpp
+template < typename T >
+void f( const T ) ;
+
+f( 0 ) ; // T = int
+~~~
+
+# もうひとつ例
+
+~~~cpp
+template < typename T >
+void f( T * ) ;
+int x{} ;
+f( &x ) ; // T = int
+~~~
+
+# 推定方法
+
++ function parameter type adjustments
++ Tへの配列型→ Tへのポインター型
++ トップレベルCV修飾子の削除
+
+# 仮引数と実引数をすり合わせる
+
++ 仮引数が`T *`
++ 実引数が`int *`
++ T = `int`
+
+# placeholder type specifiers
+
++ auto
++ decltype(auto)
+
+# 例
+
+~~~cpp
+// int
+auto a = 0 ;
+// double
+auto b = 0.0 ;
+~~~
+
+# 例
+
+~~~cpp
+// int
+decltype(auto) a = 0 ;
+// double
+decltype(auto) b = 0.0 ;
+~~~
+
+# decltype(auto)
+
++ 同じ意味
+
+~~~cpp
+decltype(auto) name = expr ;
+
+decltype(expr) name = expr ;
+~~~
+
+# auto
+
++ テンプレート実引数推定のルールを使う
+
+# 違い
+
+~~~cpp
+// int &&
+auto && a = 0 ;
+// エラー
+decltype(auto) && b = 0 ;
+~~~
+
+# 違い
+
+~~~cpp
+int && f() ;
+
+// int
+auto a = f() ;
+// int &&
+decltype(auto) b = f() ;
+~~~
+
