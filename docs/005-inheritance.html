@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="江添亮">
+  <meta name="dcterms.date" content="2019-09-30">
+  <title>派生</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="reveal.js/css/reveal.css">
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="reveal.js/css/theme/black.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">派生</h1>
+  <p class="author">江添亮</p>
+  <p class="date">2019-09-30</p>
+</section>
+
+<section id="細目" class="slide level1">
+<h1>細目</h1>
+<ul>
+<li>派生と継承</li>
+<li>RTTI</li>
+<li>type erasure</li>
+<li>expression templates</li>
+</ul>
+</section>
+<section id="クラスがある" class="slide level1">
+<h1>クラスがある</h1>
+<pre class="cpp"><code>struct A
+{
+    int data_member ;
+    void member_function() ;
+} ;</code></pre>
+</section>
+<section id="データメンバーに持つ" class="slide level1">
+<h1>データメンバーに持つ</h1>
+<ul>
+<li>B has-a A</li>
+</ul>
+<pre class="cpp"><code>struct B
+{
+    A a ;
+} ;</code></pre>
+</section>
+<section id="メンバー経由で使う" class="slide level1">
+<h1>メンバー経由で使う</h1>
+<pre class="cpp"><code>B b ;
+b.a.data_member = 0 ;
+b.a.member_function() ;</code></pre>
+</section>
+<section id="派生derivation" class="slide level1">
+<h1>派生(derivation)</h1>
+<ul>
+<li>B is-a A</li>
+<li>B derives from A</li>
+<li>A is a base class of B</li>
+<li>シンタックスシュガー</li>
+</ul>
+<pre class="cpp"><code>struct B : A
+{ } ;</code></pre>
+</section>
+<section id="is-a" class="slide level1">
+<h1>is-a</h1>
+<ul>
+<li>クラスは基本クラスである</li>
+<li>ポインターを変換できる</li>
+<li>リファレンスを変換できる</li>
+</ul>
+<pre class="cpp"><code>B b ;
+A * p = &amp;b ;
+A &amp; r = b ;</code></pre>
+</section>
+<section id="継承inheritance" class="slide level1">
+<h1>継承(inheritance)</h1>
+<ul>
+<li>基本クラスのメンバーを派生クラスが受け継ぐ</li>
+</ul>
+<pre class="cpp"><code>B b ;
+b.data_member = 0 ;
+b.member_function() ;</code></pre>
+</section>
+<section id="派生-vs-継承" class="slide level1">
+<h1>派生 vs 継承</h1>
+<ul>
+<li>派生は基本クラスと派生クラスの関係のこと</li>
+<li>継承は基本クラスのメンバーを受け継ぐこと</li>
+</ul>
+</section>
+<section id="supersub" class="slide level1">
+<h1>super/sub</h1>
+<ul>
+<li>基本クラスはスーパークラス</li>
+<li>派生クラスはsubクラス</li>
+<li>C++では使わない用語</li>
+<li>Bjarneが覚えられなかったから</li>
+<li>base/derivedになった</li>
+</ul>
+</section>
+<section id="hidingおさらい" class="slide level1">
+<h1>hidingおさらい</h1>
+<ul>
+<li>スコープの内側の名前は</li>
+<li>外側の同名を隠す</li>
+</ul>
+<pre class="cpp"><code>int name ;
+void f()
+{
+    int name{} ;
+    // 関数fのローカル変数name
+    name = 0 ;
+}</code></pre>
+</section>
+<section id="クラススコープ" class="slide level1">
+<h1>クラススコープ</h1>
+<ul>
+<li>クラスもスコープ</li>
+</ul>
+<pre class="cpp"><code>// グローバル名前空間スコープ
+class S
+{
+// クラスSのスコープ
+} ;</code></pre>
+</section>
+<section id="クラスのhiding" class="slide level1">
+<h1>クラスのhiding</h1>
+<pre class="cpp"><code>struct A { int name ; } ;
+struct B : A { } ;
+B b ;
+// B::name
+b.name = 0 ;</code></pre>
+</section>
+<section id="基本クラスの名前の参照方法" class="slide level1">
+<h1>基本クラスの名前の参照方法</h1>
+<ul>
+<li>qualified nameを使う</li>
+</ul>
+<pre class="cpp"><code>b.A::name = 0 ;</code></pre>
+</section>
+<section id="メンバー関数とhiding" class="slide level1">
+<h1>メンバー関数とhiding</h1>
+<ul>
+<li>メンバー関数名もhiding</li>
+</ul>
+<pre class="cpp"><code>struct A { void name() ; } ;
+struct B : A { void name() ; } ;
+B b ;
+// B::name
+b.name() ;</code></pre>
+</section>
+<section id="オーバーロード解決とhiding" class="slide level1">
+<h1>オーバーロード解決とhiding</h1>
+<ul>
+<li>見つかった名前が候補関数</li>
+<li>見つからない名前は候補関数ではない</li>
+<li>候補関数でなければ選ばれることはない</li>
+</ul>
+<pre class="cpp"><code>struct A { void name(int) ; } ;
+struct B : A { void name(double) ; } ;
+B b ;
+// B::name
+b.name(0) ;</code></pre>
+</section>
+<section id="using宣言" class="slide level1">
+<h1>using宣言</h1>
+<ul>
+<li>基本クラスの名前をスコープに持ち込む</li>
+</ul>
+<pre class="cpp"><code>struct A { void name(int) ; }
+struct B : A
+{
+    using A::name ;
+    void name(double) ;
+} ;
+
+B b ;
+// A::name
+b.name(0) ;
+// B::name
+b.name(0.0) ;</code></pre>
+</section>
+<section id="継承されないコンストラクター" class="slide level1">
+<h1>継承されないコンストラクター</h1>
+<pre class="cpp"><code>struct A{ A(int) ; } ;
+struct B : A { }
+// エラー
+B b(123) ;</code></pre>
+</section>
+<section id="継承コンストラクター" class="slide level1">
+<h1>継承コンストラクター</h1>
+<ul>
+<li>using宣言を使う</li>
+</ul>
+<pre class="cpp"><code>struct A{ A(int) ; } ;
+struct B : A
+{
+    using A::A ; 
+} ;
+// OK
+B b(123) ;</code></pre>
+</section>
+<section id="ポリモーフィズム" class="slide level1">
+<h1>ポリモーフィズム</h1>
+<ul>
+<li>こういうクラスがある</li>
+</ul>
+<pre class="cpp"><code>struct A { void f() ; }
+struct B : A { void f() ; }</code></pre>
+</section>
+<section id="実行時型" class="slide level1">
+<h1>実行時型</h1>
+<ul>
+<li>こういう関数がある</li>
+<li>A, Bどちらか戻り値</li>
+<li>実行時にしかわからない</li>
+</ul>
+<pre class="cpp"><code>std::unique_ptr&lt;A&gt; get()
+{
+    bool b{} ;
+    std::cin &gt;&gt; b ;
+    if ( b )
+        return std::make_unique&lt;A&gt;() ;
+    else
+        return std::make_unique&lt;B&gt;() ;
+}</code></pre>
+</section>
+<section id="仕様例" class="slide level1">
+<h1>仕様例</h1>
+<pre class="cpp"><code>auto p = get() ;
+p-&gt;f() ;</code></pre>
+</section>
+<section id="結果" class="slide level1">
+<h1>結果</h1>
+<ul>
+<li>A::fが呼ばれる</li>
+<li>A *だから</li>
+<li>実行時の型に合わせたメンバー関数が呼ばれてほしい</li>
+</ul>
+</section>
+<section id="virtual関数" class="slide level1">
+<h1>virtual関数</h1>
+<ul>
+<li>virtualキーワード</li>
+<li>シグネチャが一致した派生クラスのメンバー関数は</li>
+<li>基本クラスのvirtual関数をオーバーライドする</li>
+<li>戻り値の型は少し特殊なルールがある</li>
+</ul>
+<pre class="cpp"><code>struct A
+{
+    virtual void f() ;
+} ;
+struct B : A
+{
+    void f () ; // A::fをオーバーライド
+}</code></pre>
+</section>
+<section id="蛇足" class="slide level1">
+<h1>蛇足</h1>
+<ul>
+<li>派生クラスにもvirtualと書いていい</li>
+<li>書く必要はない</li>
+</ul>
+<pre class="cpp"><code>struct B : A
+{
+    virtual f() ;
+} ;</code></pre>
+</section>
+<section id="結果-1" class="slide level1">
+<h1>結果</h1>
+<p><code>A *</code>, <code>A &amp;</code>の参照先が</p>
+<ul>
+<li>AならばA::fが呼ばれる</li>
+<li>BならばB::fが呼ばれる</li>
+</ul>
+</section>
+<section id="シグネチャ違い" class="slide level1">
+<h1>シグネチャ違い</h1>
+<ul>
+<li>シグネチャが違う場合はオーバーライドされない</li>
+</ul>
+<pre class="cpp"><code>struct A { virtual void func(int) ; } ;
+struct B : A
+{
+    // シグネチャが違う
+    void func(long) ; 
+    void funk(int) ;
+}</code></pre>
+</section>
+<section id="override" class="slide level1">
+<h1>override</h1>
+<ul>
+<li>オーバーライドを明示するキーワード</li>
+<li>オーバーライドしていないとエラー</li>
+</ul>
+<pre class="cpp"><code>struct B : A
+{
+    // OK
+    void func(int) override ;
+    // エラー
+    void func(long) override ;
+    void funk(int) override ;
+}</code></pre>
+</section>
+<section id="pure-virtual関数" class="slide level1">
+<h1>pure virtual関数</h1>
+<ul>
+<li>= 0をつける</li>
+<li>abstractクラスになる</li>
+</ul>
+<pre class="cpp"><code>struct abstract 
+{
+    void f() = 0 ;
+} ;</code></pre>
+</section>
+<section id="abstractクラス" class="slide level1">
+<h1>abstractクラス</h1>
+<ul>
+<li>オブジェクトを作れない</li>
+</ul>
+<pre class="cpp"><code>// エラー
+struct abstract object ;</code></pre>
+</section>
+<section id="脱abstract" class="slide level1">
+<h1>脱abstract</h1>
+<ul>
+<li>pure virtual関数をオーバーライドする</li>
+</ul>
+<pre class="cpp"><code>struct concrete : abstract
+{
+    void f() override { }
+} ;
+// オブジェクトを作れる
+concrete object ;</code></pre>
+</section>
+<section id="多重継承" class="slide level1">
+<h1>多重継承</h1>
+<ul>
+<li>Multiple Inheritance</li>
+<li>複数の基本クラスを持つこと</li>
+<li>歴史的経緯で多重継承と呼ばれている</li>
+</ul>
+</section>
+<section id="例" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>struct A { } ;
+struct B { } ;
+struct C : A, B { } ;</code></pre>
+</section>
+<section id="例-1" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>struct A { int x ; void f() ; } ;
+struct B { int x ; void f() ; } ;
+struct C : A, B { } ;
+
+C c ;
+C.A::x = 0 ;
+C.B::f() ;</code></pre>
+</section>
+<section id="共通の基本クラス" class="slide level1">
+<h1>共通の基本クラス</h1>
+<ul>
+<li>Cにはcommonが2つある</li>
+<li>A::common</li>
+<li>B::common</li>
+</ul>
+<pre class="cpp"><code>struct common { int x ; } ;
+struct A : common { } ;
+struct B : common { } ;
+struct C : A, B { } ;</code></pre>
+</section>
+<section id="例-2" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>C c ;
+// C::A::common::x
+c.A::x ;
+// C::B::common::x
+c.A::x ;</code></pre>
+</section>
+<section id="virtual基本クラス" class="slide level1">
+<h1>virtual基本クラス</h1>
+<ul>
+<li>virtualキーワードを付けた基本クラス</li>
+<li>クラスのオブジェクトにvirtual基本クラスはひとつしか存在しない</li>
+</ul>
+</section>
+<section id="例-3" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>struct common { int x ; } ;
+struct A : virtual common { } ;
+struct B : virtual common { } ;
+struct C : A, B { } ;
+C c ;
+c.x ; // OK</code></pre>
+</section>
+<section id="派生クラスへの型変換" class="slide level1">
+<h1>派生クラスへの型変換</h1>
+<ul>
+<li>基本クラスのポインターやリファレンスから</li>
+<li>派生クラスのポインターやリファレンスに変換できる</li>
+<li>自己責任</li>
+</ul>
+<pre class="cpp"><code>struct A { } ;
+struct B : A { int member ; } ;
+
+void f( A * p )
+{
+    B * bp = static_cast&lt;B *&gt;(p) ;
+    bp-&gt;member = 0 ;
+    B &amp; br = static_cast&lt;B &amp;&gt;(*p) ;
+    br.member = 0 ;
+}</code></pre>
+</section>
+<section id="危険" class="slide level1">
+<h1>危険</h1>
+<ul>
+<li>型が実行時にしかわからない場合</li>
+</ul>
+<pre class="cpp"><code>void evil( bool random )
+{
+    if ( random )
+    {
+        A a ;
+        f(&amp;a) ;
+    }
+    else
+    {
+        B b ;
+        f(&amp;b) ;
+    }
+}</code></pre>
+</section>
+<section id="安全な変換" class="slide level1">
+<h1>安全な変換</h1>
+<ul>
+<li>dynamic_cast</li>
+<li>ポインターとリファレンスを変換する</li>
+</ul>
+<pre class="cpp"><code>dynamic_cast&lt;derived&gt;(base) ;</code></pre>
+</section>
+<section id="ポインターの場合" class="slide level1">
+<h1>ポインターの場合</h1>
+<ul>
+<li>pがBを差しているのならば変換される</li>
+<li>それ以外の場合はnullptr</li>
+</ul>
+<pre class="cpp"><code>B * bp = dynamic_cast&lt;B *&gt;(p) ;</code></pre>
+</section>
+<section id="リファレンスの場合" class="slide level1">
+<h1>リファレンスの場合</h1>
+<ul>
+<li>pがBを差しているのならば変換される</li>
+<li>それ以外の場合はthrow std::bad_cast</li>
+</ul>
+<pre class="cpp"><code>B &amp; br = dynamic_cast&lt;B &amp;&gt;(*p) ;</code></pre>
+</section>
+<section id="基本クラスの重複と変換" class="slide level1">
+<h1>基本クラスの重複と変換</h1>
+<ul>
+<li>どちら側のオブジェクトなのか明示的にする</li>
+</ul>
+<pre class="cpp"><code>struct A { } ;
+struct B : A { } ;
+struct C : A { } ;
+struct D : B, C { } ;
+
+D d ;
+// D::B::A
+A * ba = static_cast&lt;A &amp;&gt;( static_cast&lt;B &amp;&gt;(d) ) ;
+// D::C::A
+A * ca = static_cast&lt;A &amp;&gt;( static_cast&lt;B &amp;&gt;(d) ) ;</code></pre>
+</section>
+<section id="rtti" class="slide level1">
+<h1>RTTI</h1>
+<ul>
+<li>Run Time Type Information</li>
+<li>実行時に型情報を取得する</li>
+</ul>
+</section>
+<section id="動機" class="slide level1">
+<h1>動機</h1>
+<pre class="cpp"><code>struct A { } ;
+struct B : A { } ;
+void f( A * p )
+{
+    // pが参照するオブジェクトの実行時型を知りたい
+}</code></pre>
+</section>
+<section id="typeid" class="slide level1">
+<h1>typeid</h1>
+<ul>
+<li>型情報を返す</li>
+</ul>
+<pre class="cpp"><code>typeid(expression)
+typeid(type-id)</code></pre>
+</section>
+<section id="例-4" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>// intの型情報
+typeid(0) ;
+typeid(int) ;</code></pre>
+</section>
+<section id="type_info" class="slide level1">
+<h1>type_info</h1>
+<ul>
+<li>typeidを評価した結果の値の型</li>
+<li>コピーできない</li>
+<li>リファレンスで受ける</li>
+<li>寿命を気にする必要はない</li>
+</ul>
+<pre class="cpp"><code>std::type_info &amp; t = typeid(int) ;
+decltype(auto) t = typeid(int) ;</code></pre>
+</section>
+<section id="比較" class="slide level1">
+<h1>比較</h1>
+<ul>
+<li>type_infoは同値比較できる。</li>
+</ul>
+<pre class="cpp"><code>int x{} ;
+bool b1 = typeid(x) == typeid(int) ;
+bool b2 = typeid(x) != typeid(double) ;</code></pre>
+</section>
+<section id="typed_index" class="slide level1">
+<h1>typed_index</h1>
+<ul>
+<li>type_infoのラッパー</li>
+<li>コピーできる</li>
+<li>大小比較できる</li>
+<li>ハッシュがとれる</li>
+</ul>
+</section>
+<section id="例-5" class="slide level1">
+<h1>例</h1>
+<pre class="cpp"><code>std::type_index ti = typeid(int) ;
+std::vector&lt; std::type_index &gt; v ;
+std::flat_map&lt; std::type_index &gt; fm ;
+std::unordered_map&lt; std::type_index &gt; um ;</code></pre>
+</section>
+<section id="静的型と動的型" class="slide level1">
+<h1>静的型と動的型</h1>
+<ul>
+<li>typeidの挙動が違う</li>
+</ul>
+</section>
+<section id="静的型type_info" class="slide level1">
+<h1>静的型type_info</h1>
+<ul>
+<li>typeidはコンパイル時にtype_infoを決定する</li>
+</ul>
+<pre class="cpp"><code>void f( Base &amp; b )
+{
+    // 常にtrue
+    bool b = typeid(b) == typeid(Base) ;
+}</code></pre>
+</section>
+<section id="動的型type_info" class="slide level1">
+<h1>動的型type_info</h1>
+<ul>
+<li>typeidは実行時にtype_infoを決定する</li>
+</ul>
+<pre class="cpp"><code>void f( Base &amp; b )
+{
+    // falseになりうる
+    bool b = typeid(b) == typeid(Base) ;
+}</code></pre>
+</section>
+<section id="動的型" class="slide level1">
+<h1>動的型</h1>
+<ul>
+<li>typeidに渡すクラスがポリモーフィック型</li>
+</ul>
+</section>
+<section id="ポリモーフィック型" class="slide level1">
+<h1>ポリモーフィック型</h1>
+<ul>
+<li>virtual関数をもつクラス</li>
+<li>virtual関数を継承するクラス</li>
+</ul>
+</section>
+<section id="派生と継承の使い方" class="slide level1">
+<h1>派生と継承の使い方</h1>
+<ul>
+<li>iostream</li>
+<li>type_tratis</li>
+<li>mixin</li>
+<li>type erasure</li>
+</ul>
+</section>
+<section id="iostream" class="slide level1">
+<h1>iostream</h1>
+<ul>
+<li>オブジェクト指向</li>
+<li>共通コードの再利用</li>
+<li>適当なグラフをググる</li>
+</ul>
+</section>
+<section id="コード再利用" class="slide level1">
+<h1>コード再利用</h1>
+<ul>
+<li>2Dゲームの画面上に表示するオブジェクト</li>
+<li>共通の操作を抜き出す</li>
+</ul>
+<pre class="cpp"><code>struct object
+{
+    float x, y ;
+    path image ;
+
+    virtual void update() = 0 ;
+    virtual void render() = 0 ;
+    virtual bool interect_with( object &amp; ) = 0 ;
+} ;</code></pre>
+</section>
+<section id="実際のオブジェクト" class="slide level1">
+<h1>実際のオブジェクト</h1>
+<ul>
+<li>objectを基本クラスに持つ</li>
+</ul>
+<pre class="cpp"><code>struct tree : object ;
+struct house : object ;
+strcut enemy : object ;</code></pre>
+</section>
+<section id="すると" class="slide level1">
+<h1>すると</h1>
+<ul>
+<li>同じコードで処理</li>
+</ul>
+<pre class="cpp"><code>std::vector&lt; std::shared_ptr&lt;object&gt; &gt; objects ;
+
+for ( auto o : objects )
+{
+    o-&gt;update() ;
+    o-&gt;render() ;
+    if ( o-&gt;intersect_with(player) )
+        ...
+}</code></pre>
+</section>
+<section id="type_tratis" class="slide level1">
+<h1>type_tratis</h1>
+<ul>
+<li>ナイーブなis_pointerの実装</li>
+</ul>
+<pre class="cpp"><code>template &lt; typename T &gt;
+struct is_pointer
+{ static constexpr bool value = false ; } ;
+template &lt; typename T &gt;
+struct is_pointer&lt;T *&gt;
+{ static constexpr bool value = true ; } ;</code></pre>
+</section>
+<section id="本当の実装" class="slide level1">
+<h1>本当の実装</h1>
+<ul>
+<li>boilarplate</li>
+</ul>
+<pre class="cpp"><code>template &lt; typename T &gt;
+struct is_pointer
+{
+    static constexpr bool value = false ;
+    using value_type = bool ;
+    using type = integral_constant&lt;bool, false&gt; ;
+    constexpr operator bool() const noexcept { return false ; }
+    constexpr bool operator()() const noexcept( return false ; }
+} ;</code></pre>
+</section>
+<section id="integral_constant" class="slide level1">
+<h1>integral_constant</h1>
+<pre class="cpp"><code>template&lt;class T, T v&gt; 
+struct integral_constant
+{
+    static constexpr T value = v;
+    using value_type = T;
+    using type = integral_constant&lt;T, v&gt;;
+    constexpr operator value_type() const noexcept { return value; }
+    constexpr value_type operator()() const noexcept { return value; }
+} ;</code></pre>
+</section>
+<section id="typedef名" class="slide level1">
+<h1>typedef名</h1>
+<pre class="cpp"><code>template&lt;bool B&gt;
+using bool_constant = integral_constant&lt;bool, B&gt;;
+using true_type = bool_constant&lt;true&gt;;
+using false_type = bool_constant&lt;false&gt;;</code></pre>
+</section>
+<section id="実装" class="slide level1">
+<h1>実装</h1>
+<pre class="cpp"><code>template &lt; typename T &gt;
+struct is_pointer       : std::false_type { } ;
+template &lt; typename T &gt;
+struct is_pointer&lt;T *&gt;  : std::true_type { } ;</code></pre>
+</section>
+<section id="mixin" class="slide level1">
+<h1>mixin</h1>
+<ul>
+<li>基本クラスとして使うライブラリ</li>
+<li>クラスに機能を追加する</li>
+</ul>
+</section>
+<section id="nested_exception" class="slide level1">
+<h1>nested_exception</h1>
+<ul>
+<li>例外が来た</li>
+<li>やってきた例外をそのままに</li>
+<li>自分の例外も投げたい</li>
+<li>例外のネストがしたい</li>
+</ul>
+<pre class="cpp"><code>void do_work()
+{
+    try {
+        do_internal_work() ;
+    } catch(...)
+    {
+        // キャッチした例外も投げたい
+        throw std::logic_error(&quot;work failed.&quot;) ;
+    }
+
+}</code></pre>
+</section>
+<section id="方法" class="slide level1">
+<h1>方法</h1>
+<ul>
+<li>current_exceptionでexception_ptrを取得</li>
+<li>自前の例外クラスで保持</li>
+<li>自前の例外クラスを投げる</li>
+<li>だるい</li>
+</ul>
+</section>
+<section id="neestd_exception" class="slide level1">
+<h1>neestd_exception</h1>
+<ul>
+<li>コンストラクターでcurrent_exceptionを呼び出す</li>
+<li>exception_ptrを保持</li>
+<li>rethrow_with_nestedで保持している例外を投げる</li>
+</ul>
+</section>
+<section id="ネストされた例外" class="slide level1">
+<h1>ネストされた例外</h1>
+<ul>
+<li>decay_t<T>とnested_exceptionから多重派生したクラスをthrow</li>
+</ul>
+<pre class="cpp"><code>template &lt; typename T &gt;
+[[noreturn]] void throw_with_nested( T &amp;&amp; t ) ;</code></pre>
+</section>
+<section id="ネストされた例外の受け取り" class="slide level1">
+<h1>ネストされた例外の受け取り</h1>
+<pre class="cpp"><code>catch( std::exception &amp; e )
+{
+    // 例外処理
+    // ネストされた例外があれば投げる
+    std::rethrow_if_nested(e) ;
+}</code></pre>
+</section>
+<section id="実装-1" class="slide level1">
+<h1>実装</h1>
+<pre class="cpp"><code>template &lt; typename E &gt;
+void rethrow_if_nested( const E &amp; e )
+{
+    if constexpr (
+        std::is_polymorphic_v&lt;E&gt; &amp;&amp;
+        std::is_convertible_v&lt; E, std::nested_exception &gt; )
+    {
+        if ( auto p = dynamic_cast&lt;const std::nested_exception *&gt;( std::addressof(e) ) )
+            p-&gt;rethrow_nested() ;
+    }
+}</code></pre>
+</section>
+    </div>
+  </div>
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Transition style
+        transition: 'fade', // none/fade/slide/convex/concave/zoom
+        math: {
+          mathjax: '/usr/share/javascript/mathjax/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal.js/plugin/math/math.js', async: true },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>

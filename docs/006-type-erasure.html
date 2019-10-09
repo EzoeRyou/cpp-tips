@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="江添亮">
+  <meta name="dcterms.date" content="2019-10-09">
+  <title>Type Easure</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="reveal.js/css/reveal.css">
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="reveal.js/css/theme/black.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">Type Easure</h1>
+  <p class="author">江添亮</p>
+  <p class="date">2019-10-09</p>
+</section>
+
+<section id="タイプスレイヤー" class="slide level1">
+<h1>タイプスレイヤー</h1>
+<ul>
+<li>AIEEE!</li>
+<li>型!?</li>
+<li>型ナンデ？</li>
+</ul>
+</section>
+<section id="型殺すべし" class="slide level1">
+<h1>型殺すべし</h1>
+<ul>
+<li>慈悲はない</li>
+</ul>
+</section>
+<section id="実際ダルい" class="slide level1">
+<h1>実際ダルい</h1>
+<ul>
+<li>ユーザーからの入力を受ける</li>
+<li>様々な型で受ける</li>
+<li>簡単では？</li>
+</ul>
+<pre class="cpp"><code>template &lt; typename T &gt;
+auto get( )
+{
+    T x{} ;
+    std::cin &gt;&gt; x ;
+    return x ;
+}</code></pre>
+</section>
+<section id="ユーザーがポリモーフィック" class="slide level1">
+<h1>ユーザーがポリモーフィック</h1>
+<ul>
+<li>ユーザーは様々な型を入力できる</li>
+<li>どの型を入力するか事前に告げてくれる</li>
+</ul>
+<pre class="cpp"><code>// アイエー！
+// 型!? 型ナンデ？
+??? get_user_input()
+{
+    switch( get&lt;int&gt;() )
+    {
+        case 0 :
+            return get&lt;int&gt;() ;
+        case 1 :
+            return get&lt;double&gt;() ;
+        ...
+    }
+}</code></pre>
+</section>
+<section id="any" class="slide level1">
+<h1>any</h1>
+<ul>
+<li>合法です</li>
+<li>ワザマエ！</li>
+</ul>
+<pre class="cpp"><code>std::any get_user_input() ;</code></pre>
+</section>
+<section id="型は都市伝説" class="slide level1">
+<h1>型は都市伝説</h1>
+<ul>
+<li>anyの存在が証明</li>
+</ul>
+<pre class="cpp"><code>std::any x = 0 ;
+x = 0.0 ;
+x = &quot;hello&quot;s ;</code></pre>
+</section>
+<section id="コピー" class="slide level1">
+<h1>コピー</h1>
+<ul>
+<li>当然できる</li>
+</ul>
+<pre class="cpp"><code>std::any a = 0, b ;
+b = a ;</code></pre>
+</section>
+<section id="any_cast" class="slide level1">
+<h1>any_cast</h1>
+<ul>
+<li>値を取り出す</li>
+<li>リファレンス</li>
+</ul>
+<pre class="cpp"><code>void f( std::any a )
+{
+    try {
+        int value = std::any_cast&lt;int&gt;(a) ;
+    } catch( std::bad_any_cast &amp; e )
+    {
+        // 型が違った
+    }
+}</code></pre>
+</section>
+<section id="ポインター" class="slide level1">
+<h1>ポインター</h1>
+<pre class="cpp"><code>void f( std::any a )
+{
+    int * ptr = std::any_cast&lt;int&gt;(&amp;a) ;
+    if ( ptr == nullptr )
+        // 型が違った
+}</code></pre>
+</section>
+<section id="has_value" class="slide level1">
+<h1>has_value</h1>
+<ul>
+<li>値が入っているか調べる</li>
+</ul>
+<pre class="cpp"><code>std::any a ;
+// false
+bool b = a.has_value() ;
+a = b ;
+// true
+b = a.has_value() ;</code></pre>
+</section>
+<section id="type" class="slide level1">
+<h1>type</h1>
+<ul>
+<li>type_infoを返す</li>
+</ul>
+<pre class="cpp"><code>std::any a = 0 ;
+// true
+a.type() == typeid(int) ;
+a = 0.0 ;
+// true
+a.type() == typeid(double) ;</code></pre>
+</section>
+<section id="anyの問題点" class="slide level1">
+<h1>anyの問題点</h1>
+<ul>
+<li>なんでも入る</li>
+<li>あまりにも汎用的すぎる</li>
+<li>値のコピー程度しかできない</li>
+<li>使うときは型を指定しなければならない</li>
+</ul>
+</section>
+<section id="function" class="slide level1">
+<h1>function</h1>
+<ul>
+<li>関数呼び出しできる値しか入らない</li>
+<li>関数呼び出しできる</li>
+<li>型を指定しなくてよい</li>
+</ul>
+</section>
+<section id="使い方" class="slide level1">
+<h1>使い方</h1>
+<ul>
+<li>テンプレート実引数に関数型を指定</li>
+<li>戻り値と引数リストの型</li>
+</ul>
+<pre class="cpp"><code>// intを引数にとりintを返す
+std::funciton&lt; int (int) &gt; a ;
+// int, intを引数にとりboolを返す
+std::function&lt; bool (int,int) &gt; b ;
+// 引数を取らず戻り値も返さない
+std::function&lt; void () &gt; c ;</code></pre>
+</section>
+<section id="代入" class="slide level1">
+<h1>代入</h1>
+<pre class="cpp"><code>std::function&lt;int(int)&gt; func ;
+int a(int) { return 0 ; }
+func = &amp;a ;
+struct B { int operator(int) ; } b ;
+func = b ;
+func = [](int x){ return 0 ; } ;</code></pre>
+</section>
+<section id="メンバー関数へのポインター" class="slide level1">
+<h1>メンバー関数へのポインター</h1>
+<ul>
+<li>第一引数がthis</li>
+</ul>
+<pre class="cpp"><code>struct S { void f(int x) ; } ;
+
+int main ()
+{
+    std::function&lt;void(S *, int)&gt; f = &amp;S::f ;
+    S s ;
+    f( &amp;s, 123 ) ;
+}</code></pre>
+</section>
+<section id="リファレンス" class="slide level1">
+<h1>リファレンス</h1>
+<pre class="cpp"><code>std::function&lt;void(S &amp;, int)&gt; f = &amp;::f ;
+S s ;
+f( s, 123 ) ;</code></pre>
+</section>
+<section id="データメンバーへのポインター" class="slide level1">
+<h1>データメンバーへのポインター</h1>
+<ul>
+<li>関数呼び出しの結果</li>
+<li>データメンバーへのアクセス</li>
+</ul>
+<pre class="cpp"><code>struct S { int data ; } ;
+
+int main ()
+{
+    std::function&lt;int &amp;(S &amp;)&gt; f = &amp;S::data ;
+    S s ;
+    f(s) = 123 ;
+    // 123
+    std::cout &lt;&lt; s.data ;
+}</code></pre>
+</section>
+<section id="variant" class="slide level1">
+<h1>variant</h1>
+</section>
+    </div>
+  </div>
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Transition style
+        transition: 'fade', // none/fade/slide/convex/concave/zoom
+        math: {
+          mathjax: '/usr/share/javascript/mathjax/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal.js/plugin/math/math.js', async: true },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
