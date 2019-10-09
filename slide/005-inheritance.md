@@ -270,7 +270,8 @@ struct B : A
 
 # 結果
 
-A*の参照先が
+`A *`, `A &`の参照先が
+
 + AならばA::fが呼ばれる
 + BならばB::fが呼ばれる
 
@@ -307,18 +308,35 @@ struct B : A
 # pure virtual関数
 
 + = 0をつける
-+ abstract class
-+ オブジェクトを作れない
-+ 基本クラスとしてしか使えない
-+ 派生クラスは必ずオーバーライドしなければならない-
++ abstractクラスになる
 
 ~~~cpp
 struct abstract 
 {
     void f() = 0 ;
 } ;
+~~~
+
+# abstractクラス
+
++ オブジェクトを作れない
+
+~~~cpp
 // エラー
-abstract obj ;
+struct abstract object ;
+~~~
+
+# 脱abstract
+
++ pure virtual関数をオーバーライドする
+
+~~~cpp
+struct concrete : abstract
+{
+    void f() override { }
+} ;
+// オブジェクトを作れる
+concrete object ;
 ~~~
 
 # 多重継承
@@ -525,3 +543,251 @@ int x{} ;
 bool b1 = typeid(x) == typeid(int) ;
 bool b2 = typeid(x) != typeid(double) ;
 ~~~
+
+# typed_index
+
++ type_infoのラッパー
++ コピーできる
++ 大小比較できる
++ ハッシュがとれる
+
+# 例
+
+~~~cpp
+std::type_index ti = typeid(int) ;
+std::vector< std::type_index > v ;
+std::flat_map< std::type_index > fm ;
+std::unordered_map< std::type_index > um ;
+~~~
+
+# 静的型と動的型
+
++ typeidの挙動が違う
+
+# 静的型type_info
+
++ typeidはコンパイル時にtype_infoを決定する
+
+~~~cpp
+void f( Base & b )
+{
+    // 常にtrue
+    bool b = typeid(b) == typeid(Base) ;
+}
+~~~
+
+# 動的型type_info
+
++ typeidは実行時にtype_infoを決定する
+
+~~~cpp
+void f( Base & b )
+{
+    // falseになりうる
+    bool b = typeid(b) == typeid(Base) ;
+}
+~~~
+
+# 動的型
+
++ typeidに渡すクラスがポリモーフィック型
+
+# ポリモーフィック型
+
++ virtual関数をもつクラス
++ virtual関数を継承するクラス
+
+# 派生と継承の使い方
+
++ iostream
++ type_tratis
++ mixin
++ type erasure
+
+# iostream
+
++ オブジェクト指向
++ 共通コードの再利用
++ 適当なグラフをググる
+
+# コード再利用
+
++ 2Dゲームの画面上に表示するオブジェクト
++ 共通の操作を抜き出す
+
+~~~cpp
+struct object
+{
+    float x, y ;
+    path image ;
+
+    virtual void update() = 0 ;
+    virtual void render() = 0 ;
+    virtual bool interect_with( object & ) = 0 ;
+} ;
+~~~
+
+# 実際のオブジェクト
+
++ objectを基本クラスに持つ
+
+~~~cpp
+struct tree : object ;
+struct house : object ;
+strcut enemy : object ;
+~~~
+
+# すると
+
++ 同じコードで処理
+
+~~~cpp
+std::vector< std::shared_ptr<object> > objects ;
+
+for ( auto o : objects )
+{
+    o->update() ;
+    o->render() ;
+    if ( o->intersect_with(player) )
+        ...
+}
+~~~
+
+
+# type_tratis
+
++ ナイーブなis_pointerの実装
+
+~~~cpp
+template < typename T >
+struct is_pointer
+{ static constexpr bool value = false ; } ;
+template < typename T >
+struct is_pointer<T *>
+{ static constexpr bool value = true ; } ;
+~~~
+
+# 本当の実装
+
++ boilarplate
+
+~~~cpp
+template < typename T >
+struct is_pointer
+{
+    static constexpr bool value = false ;
+    using value_type = bool ;
+    using type = integral_constant<bool, false> ;
+    constexpr operator bool() const noexcept { return false ; }
+    constexpr bool operator()() const noexcept( return false ; }
+} ;
+~~~
+
+# integral_constant
+
+~~~cpp
+template<class T, T v> 
+struct integral_constant
+{
+    static constexpr T value = v;
+    using value_type = T;
+    using type = integral_constant<T, v>;
+    constexpr operator value_type() const noexcept { return value; }
+    constexpr value_type operator()() const noexcept { return value; }
+} ;
+~~~
+
+# typedef名
+
+~~~cpp
+template<bool B>
+using bool_constant = integral_constant<bool, B>;
+using true_type = bool_constant<true>;
+using false_type = bool_constant<false>;
+~~~
+
+# 実装
+
+~~~cpp
+template < typename T >
+struct is_pointer       : std::false_type { } ;
+template < typename T >
+struct is_pointer<T *>  : std::true_type { } ;
+~~~
+
+# mixin
+
++ 基本クラスとして使うライブラリ
++ クラスに機能を追加する
+
+# nested_exception
+
++ 例外が来た
++ やってきた例外をそのままに
++ 自分の例外も投げたい
++ 例外のネストがしたい
+
+~~~cpp
+void do_work()
+{
+    try {
+        do_internal_work() ;
+    } catch(...)
+    {
+        // キャッチした例外も投げたい
+        throw std::logic_error("work failed.") ;
+    }
+
+}
+~~~
+
+# 方法
+
++ current_exceptionでexception_ptrを取得
++ 自前の例外クラスで保持
++ 自前の例外クラスを投げる
++ だるい
+
+# neestd_exception
+
++ コンストラクターでcurrent_exceptionを呼び出す
++ exception_ptrを保持
++ rethrow_with_nestedで保持している例外を投げる
+
+# ネストされた例外
+
++ decay_t<T>とnested_exceptionから多重派生したクラスをthrow
+
+~~~cpp
+template < typename T >
+[[noreturn]] void throw_with_nested( T && t ) ;
+~~~
+
+# ネストされた例外の受け取り
+
+~~~cpp
+catch( std::exception & e )
+{
+    // 例外処理
+    // ネストされた例外があれば投げる
+    std::rethrow_if_nested(e) ;
+}
+~~~
+
+# 実装
+
+~~~cpp
+template < typename E >
+void rethrow_if_nested( const E & e )
+{
+    if constexpr (
+        std::is_polymorphic_v<E> &&
+        std::is_convertible_v< E, std::nested_exception > )
+    {
+        if ( auto p = dynamic_cast<const std::nested_exception *>( std::addressof(e) ) )
+            p->rethrow_nested() ;
+    }
+}
+~~~
+
+
